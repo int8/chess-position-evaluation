@@ -16,13 +16,13 @@ torchvision>=0.2.0
 ```
 
 To install requirements run:
-```
+```bash
 pip install -r requirements.txt
 ```
 
 Simple example of how to use the code:
 
-```
+```python
 i = iter(PgnReader("data/yourpgnfile.pgn"))
 try:
     with DataSaverWithShuffling(output_dir='output') as saver:        
