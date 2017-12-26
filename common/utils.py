@@ -12,7 +12,7 @@ def reverse_piece(piece):
     return piece
 
 class DataSaverWithShuffling:
-    def __init__(self,output_dir, chunk_size, number_of_buckets = 50):
+    def __init__(self,output_dir, chunk_size = 5000, number_of_buckets = 50):
         self.output_dir = output_dir
         self.chunk_size = chunk_size
         self.number_of_buckets = number_of_buckets

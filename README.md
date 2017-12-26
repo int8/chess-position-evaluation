@@ -24,16 +24,21 @@ pip install -r requirements.txt
 Simple example of how to use the code:
 
 ```python
-i = iter(PgnReader("data/yourpgnfile.pgn"))
-try:
-    with DataSaverWithShuffling(output_dir='output') as saver:        
-        while(True):
-            position = next(i)
-            transformer = Position2SparseRepresentation()
-            obj = transformer.transform_position_with_context(position)
-            saver.insert_next(obj)            
-except StopIteration as error:
-    pass
+from common.readers import PgnReader
+from common.transformations import Position2SparseRepresentation
+from common.utils import DataSaverWithShuffling
+
+with PgnReader("data/yourdata.pgn") as reader:
+    i = iter(reader)
+    try:
+        with DataSaverWithShuffling(output_dir='output', chunk_size = 5000) as saver:
+            while(True):
+                position = next(i)
+                transformer = Position2SparseRepresentation()
+                obj = transformer.transform_position_with_context(position)
+                saver.insert_next(obj)
+    except StopIteration as error:
+        pass
 ```
 
 
