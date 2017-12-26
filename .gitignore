@@ -5,3 +5,4 @@ output/
 data/
 .cache
 *.ipynb
+__pycache__
