@@ -40,5 +40,5 @@ except StopIteration as error:
 To run tests try:
 
 ```bash
-py.test -v tests/unittests.py
+py.test -v tests/
 ```
