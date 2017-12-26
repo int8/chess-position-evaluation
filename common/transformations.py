@@ -52,7 +52,6 @@ class FenTranformation:
             self.can_castle_white_queen(),
         ]
 
-
     def en_passant_target_square(self):
         return None if self.elems[3] == '-' else self.elems[3]
 
@@ -145,6 +144,6 @@ class Position2SparseRepresentation:
         return {
             'current_position': tensor_position,
             'prev_positions': prev_positions,
-            'winner': result,
+            'result': result,
             'ends_with_checkmate': position.checkmate
         }

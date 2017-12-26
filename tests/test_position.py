@@ -57,22 +57,51 @@ def test_if_position_after_15_move_is_correct():
 
 def test_if_second_position_has_correct_prev_moves_after_board_flipping():
     positions = _load_positions_from_fischer_spassky_1972_game_6(5)
-    position_after_first_move = positions[1]
-    _assert_fens_of_position_sparse_representations_when_flipped(position_after_first_move)
+    position = positions[1]
+    _assert_fens_of_position_sparse_representations_when_flipped(position)
 
 
 def test_if_10th_position_has_correct_prev_moves_after_board_flipping():
     positions = _load_positions_from_fischer_spassky_1972_game_6(5)
-    position_after_first_move = positions[11]
-    _assert_fens_of_position_sparse_representations_when_flipped(position_after_first_move)
+    position = positions[11]
+    _assert_fens_of_position_sparse_representations_when_flipped(position)
 
 
 def test_if_18th_position_has_correct_prev_moves_after_board_flipping():
     positions = _load_positions_from_fischer_spassky_1972_game_6(5)
-    position_after_first_move = positions[19]
-    _assert_fens_of_position_sparse_representations_when_flipped(position_after_first_move)
+    position = positions[19]
+    _assert_fens_of_position_sparse_representations_when_flipped(position)
 
 
+def test_if_13th_position_label_correctly_flipped():
+    positions = _load_positions_from_fischer_spassky_1972_game_6(5)
+    position = positions[14]
+    _test_if_label_is_correctly_flipped(position)
+
+
+def test_if_25th_position_label_correctly_flipped():
+    positions = _load_positions_from_fischer_spassky_1972_game_6(5)
+    position = positions[26]
+    _test_if_label_is_correctly_flipped(position)
+
+
+def test_if_65th_position_label_correctly_flipped():
+    positions = _load_positions_from_fischer_spassky_1972_game_6(5)
+    position = positions[66]
+    _test_if_label_is_correctly_flipped(position)
+
+
+def _test_if_label_is_correctly_flipped(position):
+    f = FenTranformation(position.position)
+    next_to_move = f.next_to_move()
+    transformation = Position2SparseRepresentation(flip_on = next_to_move)
+    representation = transformation.transform_position_with_context(position)
+    result = None if position.draw() else (position.white_wins())
+
+    if result == None:
+        assert representation['result'] == None
+    else:
+        assert representation['result'] != result
 
 def _load_positions_from_fischer_spassky_1972_game_6(memory_size = 0):
     positions = []
