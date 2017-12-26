@@ -3,6 +3,14 @@ import uuid
 from random import shuffle
 import gzip
 
+
+def reverse_piece(piece):
+    if piece.islower():
+        return piece.upper()
+    if piece.isupper():
+        return piece.lower()
+    return piece
+
 class DataSaverWithShuffling:
     def __init__(self,output_dir, chunk_size, number_of_buckets = 50):
         self.output_dir = output_dir
@@ -10,7 +18,7 @@ class DataSaverWithShuffling:
         self.number_of_buckets = number_of_buckets
         self.chunks = [list([]) for _ in range(0,number_of_buckets)]
         self.current_order_of_inserting = range(0,self.number_of_buckets)[::-1]
-        #shuffle(self.current_order_of_inserting)
+        shuffle(self.current_order_of_inserting)
 
     def __enter__(self):
         return self
@@ -25,7 +33,7 @@ class DataSaverWithShuffling:
 
         if len(self.current_order_of_inserting) == 0:
             self.current_order_of_inserting = range(0,self.number_of_buckets)
-            #shuffle(self.current_order_of_inserting)
+            shuffle(self.current_order_of_inserting)
 
         current_chunk = self.current_order_of_inserting.pop()
         self.chunks[current_chunk].append(obj)

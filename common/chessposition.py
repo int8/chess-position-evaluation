@@ -17,6 +17,15 @@ class PositionWithContext:
         self.checkmate = checkmate
         self.result = result
 
+    def white_wins(self):
+        return self.result == 1
+
+    def black_wins(self):
+        return self.result == 0
+
+    def draw(self):
+        return self.result == -1
+
     def __str__(self):
         return str({
             'position':  self.position,

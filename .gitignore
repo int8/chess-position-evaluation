@@ -1,5 +1,7 @@
-.pyc
+**/.pyc
 common/*.pyc
 main.py
 output/
 data/
+.cache
+*.ipynb

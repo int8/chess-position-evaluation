@@ -13,6 +13,7 @@ numpy>=1.12.0
 python-chess>=0.22.0
 torch>=0.3.0.post4
 torchvision>=0.2.0
+py
 ```
 
 To install requirements run:
@@ -33,4 +34,11 @@ try:
             saver.insert_next(obj)            
 except StopIteration as error:
     pass
+```
+
+
+To run tests try:
+
+```bash
+py.test -v tests/unittests.py
 ```

@@ -11,7 +11,7 @@ class PgnReader:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        close(self.pgn)
+        self.pgn.close()
 
     def __iter__(self):
         self.current_game = ChessGame(chess.pgn.read_game(self.pgn))
