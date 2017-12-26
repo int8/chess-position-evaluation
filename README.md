@@ -13,7 +13,7 @@ numpy>=1.12.0
 python-chess>=0.22.0
 torch>=0.3.0.post4
 torchvision>=0.2.0
-py
+pytest>=3.3.1
 ```
 
 To install requirements run:
