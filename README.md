@@ -21,27 +21,31 @@ To install requirements run:
 pip install -r requirements.txt
 ```
 
-Simple example of how to use the code:
+To translate PGN file into tensor-like data (coordinates and values of non-zero tensor entries + game metadata):
 
 ```python
-from common.readers import PgnReader
-from common.transformations import Position2SparseRepresentation
-from common.utils import DataSaverWithShuffling
+from common.readers import PgnReader as data_reader
+from common.io import FileSystemDataSaverWithShuffling as data_saver
 
-with PgnReader("data/yourdata.pgn") as reader:
-    i = iter(reader)
-    try:
-        with DataSaverWithShuffling(output_dir='output', chunk_size = 5000) as saver:
-            while(True):
-                position = next(i)
-                transformer = Position2SparseRepresentation()
-                obj = transformer.transform_position_with_context(position)
-                saver.insert_next(obj)
-    except StopIteration as error:
-        pass
+with data_reader("data.pgn") as reader, data_saver('output', chunk_size = 8000) as saver:
+    for position in iter(reader):
+        black_to_move = position['current'].black_to_move
+        current_position_tensor = position['current'].get_tensor(flip = black_to_move)
+        prev_positions_tensor = [prev_position.get_tensor(flip = black_to_move) for prev_position in position['prev']]
+        saver.insert_next({'current': current_position_tensor, 'prev_positions': prev_positions_tensor})
 ```
 
 
+To later use the tensor-like data in pytorch you can start with:
+```python
+from common.io import TensorPositionReader as tensor_reader
+t = tensor_reader("output", number_of_files_in_memory = 10, batch_size = 100)
+for position in iter(t):
+    do_something_with(position['X'], position['Y'])
+    # position holds training data now
+    # shape of position['X'] (observations) is 100 x 6 x 6 x 8
+    # length of position['Y'] (labels) is 100
+```
 To run tests try:
 
 ```bash

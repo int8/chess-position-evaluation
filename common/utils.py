@@ -1,48 +1,5 @@
-import torch
-import uuid
-from random import shuffle
-import gzip
-
-
-def reverse_piece(piece):
-    if piece.islower():
-        return piece.upper()
-    if piece.isupper():
-        return piece.lower()
-    return piece
-
-class DataSaverWithShuffling:
-    def __init__(self,output_dir, chunk_size = 5000, number_of_buckets = 50):
-        self.output_dir = output_dir
-        self.chunk_size = chunk_size
-        self.number_of_buckets = number_of_buckets
-        self.chunks = [list([]) for _ in range(0,number_of_buckets)]
-        self.current_order_of_inserting = range(0,self.number_of_buckets)[::-1]
-        shuffle(self.current_order_of_inserting)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        for chunk in self.chunks:
-            if len(chunk) > 0:
-                with gzip.open(self.output_dir + '/' + str(uuid.uuid1()) + '.pt' , 'wb') as f:
-                    torch.save(chunk, f)
-
-    def insert_next(self, obj):
-
-        if len(self.current_order_of_inserting) == 0:
-            self.current_order_of_inserting = range(0,self.number_of_buckets)
-            shuffle(self.current_order_of_inserting)
-
-        current_chunk = self.current_order_of_inserting.pop()
-        self.chunks[current_chunk].append(obj)
-        if len(self.chunks[current_chunk]) > self.chunk_size:
-            with gzip.open(self.output_dir + '/' + str(uuid.uuid1()) + '.pt' , 'wb') as f:
-                torch.save(self.chunks[current_chunk], f)
-            self.chunks[current_chunk] = []
-
 class TensorPositionVizualizer:
+
     def __init__(self, position):
         self.position = position
 

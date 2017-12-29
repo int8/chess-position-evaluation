@@ -1,6 +1,3 @@
-from chessposition import TensorPositionWithContext
-from utils import reverse_piece
-
 class TensorSpec:
 
     piece2layer_for_6x8x8_tensor = {
@@ -23,11 +20,11 @@ class TensorSpec:
         'r': 1,'R': 1,'q': 1,'Q': 1,'k': 1,'K': 1
     }
 
-class FenTranformation:
+class Fen:
 
-    def __init__(self, fen):
-        self.elems = fen.split(" ")
-        self.fen = fen
+    def __init__(self, fenstring):
+        self.elems = fenstring.split(" ")
+        self.fenstring = fenstring
 
     def can_castle_white_king(self):
         return 'K' in self.elems[2]
@@ -91,59 +88,22 @@ class FenTranformation:
         )
 
     def flip_position(self):
-        self.elems[0] = "".join(reversed([reverse_piece(piece) for piece in self.elems[0]]))
+        self.elems[0] = "".join(reversed([self._reverse_piece(piece) for piece in self.elems[0]]))
 
     def flip_castling(self):
-        tmp_color_changed = [reverse_piece(piece) for piece in self.elems[2]]
+        tmp_color_changed = [self._reverse_piece(piece) for piece in self.elems[2]]
         self.elems[2] = "".join(sorted(tmp_color_changed))
 
     def flip(self):
         self.elems[1] = 'w' if self.next_to_move() == 'b' else 'b'
         self.flip_position()
         self.flip_castling()
-        self.fen = " ".join(self.elems)
+        self.fenstring = " ".join(self.elems)
 
 
-class Position2SparseRepresentation:
-
-    def __init__(self, flip_on = None):
-        self.flip_on = flip_on
-
-
-    def transform_position_with_context(self, position):
-
-        f = FenTranformation(position.position)
-        flip = self.flip_on == f.next_to_move()
-        result = None if position.draw() else (position.white_wins() ^ flip)
-
-        if flip:
-            f.flip()
-
-        tensor_position = TensorPositionWithContext(
-            current_position = f.raw_board_to_6x8x8_sparse_representation(),
-            castlings_data = f.castling_vector(),
-            number_of_moves = position.number_of_moves,
-            fen = f.fen
-        )
-
-        prev_positions = []
-        for i in xrange(len(position.context)):
-            f_prev = FenTranformation(position.context[i].position)
-            if flip:
-                f_prev.flip()
-
-            prev_positions.append(
-                TensorPositionWithContext(
-                    current_position = f_prev.raw_board_to_6x8x8_sparse_representation(),
-                    castlings_data = f_prev.castling_vector(),
-                    number_of_moves = position.context[i].number_of_moves,
-                    fen = f_prev.fen
-                )
-            )
-
-        return {
-            'current_position': tensor_position,
-            'prev_positions': prev_positions,
-            'result': result,
-            'ends_with_checkmate': position.checkmate
-        }
+    def _reverse_piece(self, piece):
+        if piece.islower():
+            return piece.upper()
+        if piece.isupper():
+            return piece.lower()
+        return piece

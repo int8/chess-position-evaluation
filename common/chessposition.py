@@ -1,19 +1,22 @@
 import chess.pgn
+from common.transformations import Fen
 
-class TensorPositionWithContext:
+class ChessPositionTensorRepresentation:
 
-    def __init__(self, current_position, castlings_data, number_of_moves, fen):
-        self.current_position = current_position
-        self.castlings_data = castlings_data
-        self.number_of_moves = number_of_moves
-        self.fen = fen
+    def __init__(self, board_tensor, castlings_vector, next_to_move, game_final_length, fenstring, result):
+        self.board_tensor = board_tensor
+        self.castlings_vector = castlings_vector
+        self.next_to_move = next_to_move
+        self.game_final_length = game_final_length
+        self.fenstring = fenstring
+        self.result = result
 
-class PositionWithContext:
 
-    def __init__(self, position, context, number_of_moves, checkmate, result):
-        self.position = position
-        self.context = context
-        self.number_of_moves = number_of_moves
+class Position:
+
+    def __init__(self, fenstring, game_final_length, checkmate, result):
+        self.fen = Fen(fenstring)
+        self.game_final_length = game_final_length
         self.checkmate = checkmate
         self.result = result
 
@@ -26,14 +29,33 @@ class PositionWithContext:
     def draw(self):
         return self.result == -1
 
-    def __str__(self):
-        return str({
-            'position':  self.position,
-            'context': self.context,
-            'number_of_moves': self.number_of_moves,
-            'checkmate': self.checkmate,
-            'result': self.result
-        })
+    def get_tensor(self, flip = True):
+        if flip:
+            self.fen.flip()
+
+        result = None if self.draw() else (self.white_wins() ^ flip)
+
+        return ChessPositionTensorRepresentation(
+            board_tensor = self.fen.raw_board_to_6x8x8_sparse_representation(),
+            castlings_vector = self.fen.castling_vector(),
+            game_final_length = self.game_final_length,
+            next_to_move = self.fen.next_to_move(),
+            fenstring = self.fen.fenstring,
+            result = result
+        )
+
+    @property
+    def fenstring(self):
+        return self.fen.fenstring
+
+    @property
+    def white_to_move(self):
+        return self.fen.next_to_move() == 'w'
+
+    @property
+    def black_to_move(self):
+        return self.fen.next_to_move() == 'b'
+
 
 class ChessGame:
 
@@ -65,19 +87,24 @@ class ChessGame:
     def generate_game_positions(self, memory_size = 1):
         positions = []
         for i in range(0, len(self.game_positions)):
-            context = []
-            for j in range(1 , memory_size + 1):
-                if i - j < 0:
-                    context.append(PositionWithContext(self.game_positions[0], [], None, False, self.result))
-                else:
-                    context.append(PositionWithContext(self.game_positions[i-j], [], None, False, self.result))
             positions.append(
-                PositionWithContext(
-                    position = self.game_positions[i],
-                    context = context[::-1],
-                    number_of_moves = self.number_of_moves,
-                    checkmate = self.checkmate,
-                    result = self.result
-                )
+                {   'current': Position(
+                        fenstring = self.game_positions[i],
+                        game_final_length = self.number_of_moves,
+                        checkmate = self.checkmate,
+                        result = self.result
+                    ),
+                    'prev': self._generate_prev_positions(memory_size , current_position_index = i)
+                }
             )
         return positions
+
+
+    def _generate_prev_positions(self, prev_positions_to_keep, current_position_index):
+        prev_positions = []
+        for j in range(1 , prev_positions_to_keep + 1):
+            if current_position_index - j < 0:
+                prev_positions.append(Position(self.game_positions[0], self.number_of_moves, self.checkmate, self.result))
+            else:
+                prev_positions.append(Position(self.game_positions[current_position_index-j], self.number_of_moves, self.checkmate, self.result))
+        return prev_positions[::-1]
