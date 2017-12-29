@@ -30,13 +30,13 @@ from common.io import FileSystemDataSaverWithShuffling as data_saver
 with data_reader("data.pgn") as reader, data_saver('output', chunk_size = 8000) as saver:
     for position in iter(reader):
         black_to_move = position['current'].black_to_move
-        current_position_tensor = position['current'].get_tensor(flip = black_to_move)
-        prev_positions_tensor = [prev_position.get_tensor(flip = black_to_move) for prev_position in position['prev']]
-        saver.insert_next({'current': current_position_tensor, 'prev_positions': prev_positions_tensor})
+        current_tensor = position['current'].get_tensor(flip = black_to_move)
+        prev_tensors = [prev.get_tensor(flip = black_to_move) for prev in position['prev']]
+        saver.insert_next({'current': current_tensor, 'prev_positions': prev_tensors})
 ```
 
 
-To later use the tensor-like data in pytorch you can start with:
+To later use tensor-like data in pytorch you can start with:
 ```python
 from common.io import TensorPositionReader as tensor_reader
 t = tensor_reader("output", number_of_files_in_memory = 10, batch_size = 100)
