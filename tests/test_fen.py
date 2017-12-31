@@ -1,5 +1,11 @@
 from common.transformations import Fen
+from common.readers import PgnReader
 
+
+def test_if_flipped_twice_produce_original_input_alekhine_games():
+    positions = _load_positions_alekhine_games()
+    for position in positions:
+        flip_twice_and_compare(position['current'].fenstring)
 
 def test_if_flipped_twice_produce_original_input():
     flip_twice_and_compare("8/1P4B1/8/1q3k2/2Q5/8/4r1Np/K7 b - -")
@@ -52,3 +58,11 @@ def flip_twice_and_compare(input_fen):
     f = Fen(f.fenstring)
     f.flip()
     assert f.fenstring == input_fen
+
+
+def _load_positions_alekhine_games(memory_size = 0):
+    positions = []
+    with PgnReader("tests/test_data/Alekhine.pgn", memory_size = memory_size) as reader:
+        for position in iter(reader):
+            positions.append(position)
+    return positions

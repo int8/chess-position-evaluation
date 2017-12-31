@@ -5,6 +5,7 @@ from random import sample, shuffle
 import torch
 import gzip
 import uuid
+import logging
 
 class PgnReader:
 
@@ -86,42 +87,62 @@ class PositionReader:
 class TensorPositionReader(PositionReader):
     def append_new_data(self, new_data):
         ind_x = []; ind_z = []; ind_y = []; value = [];
-        data = {'X': torch.CharTensor(len(new_data), 6,8,8), 'Y': [0] * len(new_data)}
+        data = {'X': torch.FloatTensor(len(new_data), 6,8,8), 'Y': torch.FloatTensor(len(new_data),1), 'fens': [''] * len(new_data)}
 
         for i in range(0, len(new_data)):
             ind_x = new_data[i]['current'].board_tensor['indices_x']
             ind_y = new_data[i]['current'].board_tensor['indices_y']
             ind_z = new_data[i]['current'].board_tensor['indices_z']
             value = new_data[i]['current'].board_tensor['values']
-            data['X'][[i for _ in value], ind_z, ind_x, ind_y] = torch.CharTensor(value)
-            data['Y'][i] = new_data[i]['current'].result
+            data['X'][[i for _ in value], ind_z, ind_x, ind_y] = torch.FloatTensor(value)
+            data['Y'][i] = int(new_data[i]['current'].result) if new_data[i]['current'].result != None else 0.5
+            data['fens'][i] = new_data[i]['current'].fenstring
 
         if not self.data:
             self.data = data
         else:
             self.data['X'] = torch.cat((self.data['X'], data['X']), 0)
-        self.data['Y'] = self.data['Y'] + data['Y']
+        self.data['Y'] = torch.cat((self.data['Y'], data['Y']), 0)
+        self.data['fens'] + self.data['fens'] + data['fens']
 
     def is_load_needed(self):
-        return (self.data == None) or (self.current_index + self.batch_size > self.get_number_of_observations())
+        return (self.data == None) or (self.current_index + self.batch_size >= self.get_number_of_observations())
 
     def get_next_batch(self):
         self.current_index += self.batch_size
         return {
             'X': self.data['X'][self.current_index:(self.current_index + self.batch_size),:,:,:],
-            'Y': self.data['Y'][self.current_index:(self.current_index + self.batch_size)]
+            'Y': self.data['Y'][self.current_index:(self.current_index + self.batch_size)],
+            'fens': self.data['fens'][self.current_index:(self.current_index + self.batch_size)]
         }
 
 
 class FileSystemDataSaverWithShuffling:
 
-    def __init__(self, output_dir, chunk_size = 5000, number_of_buckets = 50):
+    def __init__(self, output_dir, chunk_size = 5000, number_of_buckets = 50, print_progress = True):
         self.output_dir = output_dir
         self.chunk_size = chunk_size
         self.number_of_buckets = number_of_buckets
         self.chunks = [list([]) for _ in range(0,number_of_buckets)]
         self.current_order_of_inserting = range(0,self.number_of_buckets)[::-1]
+        self.print_progress = print_progress
+        self._total_points_saved = 0
         shuffle(self.current_order_of_inserting)
+
+    def _log_saving(self, size, filename):
+        if self.print_progress:
+            self._total_points_saved += size
+            print "Chunk of " + str(size) + " data points has been saved to " + filename
+
+    def _log_total(self):
+        if self.print_progress:
+            print "Total data points saved so far:  " + str(self._total_points_saved)
+
+    def _save(self, chunk):
+        with gzip.open(self.output_dir + '/' + str(uuid.uuid1()) + '.pt' , 'wb') as f:
+            torch.save(chunk, f)
+            self._log_saving(len(chunk), f.name)
+            self._log_total()
 
     def __enter__(self):
         return self
@@ -129,8 +150,7 @@ class FileSystemDataSaverWithShuffling:
     def __exit__(self, exc_type, exc_value, traceback):
         for chunk in self.chunks:
             if len(chunk) > 0:
-                with gzip.open(self.output_dir + '/' + str(uuid.uuid1()) + '.pt' , 'wb') as f:
-                    torch.save(chunk, f)
+                self._save(chunk)
 
     def insert_next(self, obj):
 
@@ -140,7 +160,6 @@ class FileSystemDataSaverWithShuffling:
 
         current_chunk = self.current_order_of_inserting.pop()
         self.chunks[current_chunk].append(obj)
-        if len(self.chunks[current_chunk]) > self.chunk_size:
-            with gzip.open(self.output_dir + '/' + str(uuid.uuid1()) + '.pt' , 'wb') as f:
-                torch.save(self.chunks[current_chunk], f)
+        if len(self.chunks[current_chunk]) >= self.chunk_size:
+            self._save(self.chunks[current_chunk])
             self.chunks[current_chunk] = []

@@ -24,15 +24,21 @@ pip install -r requirements.txt
 To translate PGN file into tensor-like data (coordinates and values of non-zero tensor entries + game metadata):
 
 ```python
-from common.readers import PgnReader as data_reader
-from common.io import FileSystemDataSaverWithShuffling as data_saver
+from common.readers import PgnReader as reader
+from common.io import FileSystemDataSaverWithShuffling as saver
+from common.transformations import DataSpecs
 
-with data_reader("data.pgn") as reader, data_saver('output', chunk_size = 8000) as saver:
-    for position in iter(reader):
+# memory_size indicates how many prev moves to keep
+with reader("data.pgn", memory_size = 5) as r, saver('output', chunk_size = 5000, number_of_buckets=50) as s:
+    for position in iter(r):
+        # if you don't want to include draws in your dataset
+        if position['current'].draw():
+            continue
         black_to_move = position['current'].black_to_move
-        current_tensor = position['current'].get_tensor(flip = black_to_move)
-        prev_tensors = [prev.get_tensor(flip = black_to_move) for prev in position['prev']]
-        saver.insert_next({'current': current_tensor, 'prev_positions': prev_tensors})
+        # flipping board instead of encoding who moves next - board always seen from white perspective
+        current_data = position['current'].get_training_data(DataSpecs.vector12x8x8_flat, flip = black_to_move)
+        prev_data = [prev.get_training_data(flip = black_to_move) for prev in position['prev']]
+        s.insert_next({'current': current_data, 'prev_positions': prev_data})
 ```
 
 

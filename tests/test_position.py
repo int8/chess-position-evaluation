@@ -98,7 +98,7 @@ def test_if_65th_position_label_correctly_flipped():
 
 
 def _test_if_label_is_correctly_flipped(position):
-    tensor_representation = position['current'].get_tensor(flip = True)
+    tensor_representation = position['current'].get_training_data(flip = True)
     if position['current'].draw():
         assert tensor_representation.result == 0
     else:
@@ -116,11 +116,11 @@ def _assert_fens_equality_of_all_positions_representation_when_flipped(position)
     f = Fen(position['current'].fenstring)
     f.flip()
 
-    tensor_representation = position['current'].get_tensor(flip = True)
+    tensor_representation = position['current'].get_training_data(flip = True)
     assert tensor_representation.fenstring == f.fenstring
 
     for prev_positions in position['prev']:
         f = Fen(prev_positions.fenstring)
         f.flip()
-        tensor_representation = prev_positions.get_tensor(flip = True)
+        tensor_representation = prev_positions.get_training_data(flip = True)
         assert tensor_representation.fenstring == f.fenstring

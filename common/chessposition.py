@@ -1,16 +1,17 @@
 import chess.pgn
 from common.transformations import Fen
+from common.transformations import DataSpecs
 
-class ChessPositionTensorRepresentation:
+class ChessPositionVectorRepresentation:
 
-    def __init__(self, board_tensor, castlings_vector, next_to_move, game_final_length, fenstring, result):
-        self.board_tensor = board_tensor
+    def __init__(self, board_data, castlings_vector, next_to_move, game_final_length, fenstring, result, transformation_type):
+        self.board_data = board_data
         self.castlings_vector = castlings_vector
         self.next_to_move = next_to_move
         self.game_final_length = game_final_length
         self.fenstring = fenstring
         self.result = result
-
+        self.transformation_type = transformation_type
 
 class Position:
 
@@ -29,19 +30,20 @@ class Position:
     def draw(self):
         return self.result == -1
 
-    def get_tensor(self, flip = True):
+    def get_training_data(self, transformation_type = DataSpecs.vector12x8x8_flat, flip = True):
         if flip:
             self.fen.flip()
 
         result = None if self.draw() else (self.white_wins() ^ flip)
 
-        return ChessPositionTensorRepresentation(
-            board_tensor = self.fen.raw_board_to_6x8x8_sparse_representation(),
+        return ChessPositionVectorRepresentation(
+            board_data = self.fen.transform(transformation_type),
             castlings_vector = self.fen.castling_vector(),
             game_final_length = self.game_final_length,
             next_to_move = self.fen.next_to_move(),
             fenstring = self.fen.fenstring,
-            result = result
+            result = result,
+            transformation_type = transformation_type
         )
 
     @property
@@ -73,6 +75,9 @@ class ChessGame:
             self.result = 0
         else:
             self.result = -1
+
+    def draw(self):
+        return self.result == -1
 
     def play_main_line(self):
         self.current_board = self.current_game.board()
