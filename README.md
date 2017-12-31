@@ -49,7 +49,7 @@ t = tensor_reader("output", number_of_files_in_memory = 10, batch_size = 100)
 for position in iter(t):
     do_something_with(position['X'], position['Y'])
     # position holds training data now
-    # shape of position['X'] (observations) is 100 x 6 x 6 x 8
+    # shape of position['X'] (observations) is 100 x (12 * 8 * 8) - flat 
     # length of position['Y'] (labels) is 100
 ```
 To run tests try:
