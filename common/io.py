@@ -72,28 +72,28 @@ class PositionReader:
     def get_next_file_name(self):
         if len(self.files_shuffled) > 0:
             return self.files_shuffled.pop()
-        self.files_shuffled = sample(self.files, len(self.files))
-        return self.get_next_file_name()
+        return None
 
     def load_next_data_portion(self):
         for i in range(0, self.number_of_files_in_memory):
             filename = self.get_next_file_name()
-            with gzip.open(self.data_directory + '/' + filename, 'rb') as f:
-                data = torch.load(f)
-                print filename
-            self.append_new_data(data)
+            if filename:
+                with gzip.open(self.data_directory + '/' + filename, 'rb') as f:
+                    data = torch.load(f)
+                self.append_new_data(data)
+            raise StopIteration("No more files to read. All files have been read")
 
 
-class TensorPositionReader(PositionReader):
+class Tensor6x8x8PositionReader(PositionReader):
     def append_new_data(self, new_data):
         ind_x = []; ind_z = []; ind_y = []; value = [];
         data = {'X': torch.FloatTensor(len(new_data), 6,8,8), 'Y': torch.FloatTensor(len(new_data),1), 'fens': [''] * len(new_data)}
 
         for i in range(0, len(new_data)):
-            ind_x = new_data[i]['current'].board_tensor['indices_x']
-            ind_y = new_data[i]['current'].board_tensor['indices_y']
-            ind_z = new_data[i]['current'].board_tensor['indices_z']
-            value = new_data[i]['current'].board_tensor['values']
+            ind_x = new_data[i]['current'].board_data['indices_x']
+            ind_y = new_data[i]['current'].board_data['indices_y']
+            ind_z = new_data[i]['current'].board_data['indices_z']
+            value = new_data[i]['current'].board_data['values']
             data['X'][[i for _ in value], ind_z, ind_x, ind_y] = torch.FloatTensor(value)
             data['Y'][i] = int(new_data[i]['current'].result) if new_data[i]['current'].result != None else 0.5
             data['fens'][i] = new_data[i]['current'].fenstring
@@ -115,6 +115,48 @@ class TensorPositionReader(PositionReader):
             'Y': self.data['Y'][self.current_index:(self.current_index + self.batch_size)],
             'fens': self.data['fens'][self.current_index:(self.current_index + self.batch_size)]
         }
+
+
+class FlatVectorPositionReaderBase(PositionReader):
+
+    def get_vector_size(self):
+        raise NotImplemented()
+
+    def append_new_data(self, new_data):
+
+        data = {'X': torch.FloatTensor(len(new_data), self.get_vector_size()), 'Y': torch.FloatTensor(len(new_data),1), 'fens': [''] * len(new_data)}
+
+        for i in range(0, len(new_data)):
+            data['X'][i] = torch.FloatTensor(new_data[i]['current'].board_data)
+            data['Y'][i] = int(new_data[i]['current'].result) if new_data[i]['current'].result != None else 0.5
+            data['fens'][i] = new_data[i]['current'].fenstring
+
+        if not self.data:
+            self.data = data
+        else:
+            self.data['X'] = torch.cat((self.data['X'], data['X']), 0)
+        self.data['Y'] = torch.cat((self.data['Y'], data['Y']), 0)
+        self.data['fens'] + self.data['fens'] + data['fens']
+
+    def is_load_needed(self):
+        return (self.data == None) or (self.current_index + self.batch_size >= self.get_number_of_observations())
+
+    def get_next_batch(self):
+        self.current_index += self.batch_size
+        return {
+            'X': self.data['X'][self.current_index:(self.current_index + self.batch_size),:],
+            'Y': self.data['Y'][self.current_index:(self.current_index + self.batch_size)],
+            'fens': self.data['fens'][self.current_index:(self.current_index + self.batch_size)]
+        }
+
+class FlatVector6x8x8PositionReader(FlatVectorPositionReaderBase):
+    def get_vector_size(self):
+        return 6*8*8
+
+
+class FlatVector12x8x8PositionReader(FlatVectorPositionReaderBase):
+    def get_vector_size(self):
+        return 12*8*8
 
 
 class FileSystemDataSaverWithShuffling:

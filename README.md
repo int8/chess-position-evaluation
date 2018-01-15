@@ -9,7 +9,7 @@ In other words every piece on ```8x8``` board is represented by vector of dimens
 
 - flat vectors of size ```384 (6*8*8)``` and ```768 (12*8*8)``` being flattened versions of tensor described above
 
-- position metadata (result, number_of_moves, castlings potential) is inlcuded 
+- position metadata (result, number_of_moves, castlings potential) is inlcuded
 
 Requirements:
 ```
@@ -48,7 +48,7 @@ with reader("data.pgn", memory_size = 5) as r, saver('output', chunk_size = 5000
 
 To later use tensor-like data in pytorch you can start with:
 ```python
-from common.io import TensorPositionReader as tensor_reader
+from common.io import FlatVector12x8x8PositionReader as tensor_reader
 t = tensor_reader("output", number_of_files_in_memory = 10, batch_size = 100)
 for position in iter(t):
     do_something_with(position['X'], position['Y'])
