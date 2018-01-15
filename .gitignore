@@ -1,6 +1,7 @@
 **/.pyc
 common/*.pyc
 main.py
+mnist.py
 output/
 data/
 .cache
