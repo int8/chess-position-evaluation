@@ -30,6 +30,9 @@ class ValueNetworkTrainer:
         sum_metric = 0.0
         counter = 0.
         for position in iter(data_reader):
+            if self.use_cuda:
+                position['X'] = position['X'].cuda()
+                position['Y'] = position['Y'].cuda()
             x = self.x_tensorize_f(position['X'])
             y = self.y_tensorize_f(position['Y'])
             y_predicted = self.model(x)
