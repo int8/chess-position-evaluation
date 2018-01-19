@@ -114,13 +114,13 @@ class Tensor6x8x8PositionReader(PositionReader):
         return (self.data == None) or (self.current_index + self.batch_size >= self.get_number_of_observations())
 
     def get_next_batch(self):
-        self.current_index += self.batch_size
-        return {
+        data =  {
             'X': self.data['X'][self.current_index:(self.current_index + self.batch_size),:,:,:],
             'Y': self.data['Y'][self.current_index:(self.current_index + self.batch_size)],
             'fens': self.data['fens'][self.current_index:(self.current_index + self.batch_size)]
         }
-
+        self.current_index += self.batch_size
+        return data
 
 class FlatVectorPositionReaderBase(PositionReader):
 
@@ -147,12 +147,13 @@ class FlatVectorPositionReaderBase(PositionReader):
         return (self.data == None) or (self.current_index + self.batch_size >= self.get_number_of_observations())
 
     def get_next_batch(self):
-        self.current_index += self.batch_size
-        return {
+        data = {
             'X': self.data['X'][self.current_index:(self.current_index + self.batch_size),:],
             'Y': self.data['Y'][self.current_index:(self.current_index + self.batch_size)],
             'fens': self.data['fens'][self.current_index:(self.current_index + self.batch_size)]
         }
+        self.current_index += self.batch_size
+        return data
 
 class FlatVector6x8x8PositionReader(FlatVectorPositionReaderBase):
     def get_vector_size(self):
