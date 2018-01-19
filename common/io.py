@@ -81,7 +81,9 @@ class PositionReader:
                 with gzip.open(self.data_directory + '/' + filename, 'rb') as f:
                     data = torch.load(f)
                 self.append_new_data(data)
-            raise StopIteration("No more files to read. All files have been read")
+            else:
+                self.files_shuffled = sample(self.files, len(self.files))
+                raise StopIteration("No more files to read. All files have been read")
 
 
 class Tensor6x8x8PositionReader(PositionReader):

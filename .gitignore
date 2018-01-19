@@ -3,6 +3,7 @@ common/*.pyc
 main.py
 mnist.py
 output/
+output_test/
 data/
 .cache
 *.ipynb
