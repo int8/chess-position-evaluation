@@ -176,11 +176,11 @@ class FileSystemDataSaverWithShuffling:
     def _log_saving(self, size, filename):
         if self.print_progress:
             self._total_points_saved += size
-            print "Chunk of " + str(size) + " data points has been saved to " + filename
+            print ("Chunk of " + str(size) + " data points has been saved to " + filename)
 
     def _log_total(self):
         if self.print_progress:
-            print "Total data points saved so far:  " + str(self._total_points_saved)
+            print ("Total data points saved so far:  " + str(self._total_points_saved))
 
     def _save(self, chunk):
         with gzip.open(self.output_dir + '/' + str(uuid.uuid1()) + '.pt' , 'wb') as f:
