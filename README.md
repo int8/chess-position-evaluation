@@ -46,15 +46,41 @@ with reader("data.pgn", memory_size = 5) as r, saver('output', chunk_size = 5000
 ```
 
 
-To later use tensor-like data in pytorch you can start with:
+To later use tensor-like data to train chess value network:
 ```python
-from common.io import FlatVector12x8x8PositionReader as tensor_reader
-t = tensor_reader("output", number_of_files_in_memory = 10, batch_size = 100)
-for position in iter(t):
-    do_something_with(position['X'], position['Y'])
-    # position holds training data now
-    # shape of position['X'] (observations) is 100 x (12 * 8 * 8) - flat
-    # length of position['Y'] (labels) is 100
+from common.io import FlatVector6x8x8PositionReader
+from common.models import FeedForwardNetwork
+from training.trainers import ValueNetworkTrainer
+import torch.nn.functional as F
+import torch.optim as optim
+from torch.autograd import Variable
+
+# training data reader - reads previously created data files
+training_data_reader = FlatVector6x8x8PositionReader("data_dir", number_of_files_in_memory = 10, batch_size = 1000)
+
+# create dense feed forward neural network
+network = FeedForwardNetwork(
+    layers_shapes = [(6*8*8, 5000), (5000,500), (500,50), (50, 1)],
+    activations = [F.leaky_relu, F.leaky_relu, F.leaky_relu, F.sigmoid]
+)
+
+optimizer = optim.Adam(network.parameters(), lr=0.0001)
+
+trainer = ValueNetworkTrainer(
+    training_data_reader = training_data_reader,
+    model = network, # network itself
+    loss_function = F.mse_loss, # mean square error loss
+    x_tensorize_f = lambda x : Variable(x), # in case you need additional transformation
+    y_tensorize_f = lambda x : Variable(x), # in case you need additional transformation
+    optimizer = optimizer, # adam optimizer
+    use_cuda = False # set to true to run on CUDA
+)
+
+# train 10 epochs
+for epoch in range(0,10):    
+    trainer.train_single_epoch()
+    # save after each epoch
+    trainer.save_model_state(prefix = 'epoch_' + str(epoch) + '_')
 ```
 To run tests try:
 
