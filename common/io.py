@@ -40,7 +40,7 @@ class PositionReader:
     def get_next_batch(self):
         raise NotImplemented()
 
-    def __init__(self, data_directory, number_of_files_in_memory = 100, batch_size = 100):
+    def __init__(self, data_directory, number_of_files_in_memory = 100, batch_size = 100, print_progress = False):
         self.number_of_files_in_memory = number_of_files_in_memory
         self.data_directory = data_directory
         self.files = os.listdir(data_directory)
@@ -51,6 +51,7 @@ class PositionReader:
         self.data = None
         self.batch_size = batch_size
         self.current_index = 0
+        self.print_progress = print_progress
 
     def __enter__(self):
         return self
@@ -71,7 +72,10 @@ class PositionReader:
 
     def get_next_file_name(self):
         if len(self.files_shuffled) > 0:
-            return self.files_shuffled.pop()
+            filename = self.files_shuffled.pop()
+            if self.print_progress:
+                print ("Data files left: " + str(len(self.files_shuffled)) + " out of " + str(len(self.files)))
+            return filename
         return None
 
     def load_next_data_portion(self):
@@ -84,7 +88,6 @@ class PositionReader:
             else:
                 self.files_shuffled = sample(self.files, len(self.files))
                 raise StopIteration("No more files to read. All files have been read")
-
 
 class Tensor6x8x8PositionReader(PositionReader):
     def append_new_data(self, new_data):
