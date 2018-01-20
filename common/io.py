@@ -9,7 +9,7 @@ import logging
 
 class Logger:
     def __init__(self, name, log_file = "logs/chess.log", log_level = logging.INFO):
-        if os.environ["CHESS_DEBUG"]:
+        if "CHESS_DEBUG" in os.environ and os.environ["CHESS_DEBUG"]:
             self.logger = logging.getLogger(name)
             self.logger.setLevel(log_level)
 
@@ -25,15 +25,15 @@ class Logger:
             self.logger.addHandler(self.handler)
 
     def log_info(self, message):
-        if os.environ["CHESS_DEBUG"]:
+        if "CHESS_DEBUG" in os.environ and os.environ["CHESS_DEBUG"]:
             self.logger.info(message)
 
     def log_error(self, message):
-        if os.environ["CHESS_DEBUG"]:
+        if "CHESS_DEBUG" in os.environ and os.environ["CHESS_DEBUG"]:
             self.logger.error(message)
 
     def log_warning(self, message):
-        if os.environ["CHESS_DEBUG"]:
+        if "CHESS_DEBUG" in os.environ and os.environ["CHESS_DEBUG"]:
             self.logger.warning(message)
 
 class PgnReader(Logger):

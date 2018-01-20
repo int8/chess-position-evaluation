@@ -11,11 +11,11 @@ class ValueNetworkTrainer(Logger):
         self.y_tensorize_f = y_tensorize_f
         self.optimizer = optimizer
         self.use_cuda = use_cuda
-
+        Logger.__init__(self, self._id())
         if self.use_cuda:
             self.log_info("Using CUDA")
             self.model.cuda()
-        Logger.__init__(self, self._id())
+
 
     def train_single_epoch(self):
         for position in iter(self.training_data_reader):
