@@ -7,11 +7,41 @@ import gzip
 import uuid
 import logging
 
-class PgnReader:
+class Logger:
+    def __init__(self, name, log_file = "logs/chess.log", log_level = logging.INFO):
+        if os.environ["CHESS_DEBUG"]:
+            self.logger = logging.getLogger(name)
+            self.logger.setLevel(log_level)
+
+            # create a file handler
+            self.handler = logging.FileHandler(log_file)
+            self.handler.setLevel(log_level)
+
+            # create a logging format
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            self.handler.setFormatter(formatter)
+
+            # add the handlers to the logger
+            self.logger.addHandler(self.handler)
+
+    def log_info(self, message):
+        if os.environ["CHESS_DEBUG"]:
+            self.logger.info(message)
+
+    def log_error(self, message):
+        if os.environ["CHESS_DEBUG"]:
+            self.logger.error(message)
+
+    def log_warning(self, message):
+        if os.environ["CHESS_DEBUG"]:
+            self.logger.warning(message)
+
+class PgnReader(Logger):
 
     def __init__(self, pgn_file, memory_size = 0):
         self.memory_size = memory_size
         self.pgn = open(pgn_file)
+        Logger.__init__(self, name = self._id())
 
     def __enter__(self):
         return self
@@ -29,7 +59,10 @@ class PgnReader:
                 yield position
             self.current_game = ChessGame(chess.pgn.read_game(self.pgn))
 
-class PositionReader:
+    def _id(self):
+        return str(id(self)) + "_" +  self.__class__.__name__
+
+class PositionReader(Logger):
 
     def append_new_data(self, new_data):
         raise NotImplemented()
@@ -40,7 +73,7 @@ class PositionReader:
     def get_next_batch(self):
         raise NotImplemented()
 
-    def __init__(self, data_directory, number_of_files_in_memory = 100, batch_size = 100, print_progress = False):
+    def __init__(self, data_directory, number_of_files_in_memory = 100, batch_size = 100):
         self.number_of_files_in_memory = number_of_files_in_memory
         self.data_directory = data_directory
         self.files = os.listdir(data_directory)
@@ -51,7 +84,7 @@ class PositionReader:
         self.data = None
         self.batch_size = batch_size
         self.current_index = 0
-        self.print_progress = print_progress
+        Logger.__init__(self, name = self._id())
 
     def __enter__(self):
         return self
@@ -73,8 +106,7 @@ class PositionReader:
     def get_next_file_name(self):
         if len(self.files_shuffled) > 0:
             filename = self.files_shuffled.pop()
-            if self.print_progress:
-                print ("Data files left: " + str(len(self.files_shuffled)) + " out of " + str(len(self.files)))
+            self.log_info("Filename " + filename + " read. Data files left: " + str(len(self.files_shuffled)) + " out of " + str(len(self.files)))
             return filename
         return None
 
@@ -88,6 +120,9 @@ class PositionReader:
             else:
                 self.files_shuffled = sample(self.files, len(self.files))
                 raise StopIteration("No more files to read. All files have been read")
+
+    def _id(self):
+        return str(id(self)) + "_" + self.__class__.__name__
 
 class Tensor6x8x8PositionReader(PositionReader):
     def append_new_data(self, new_data):
@@ -165,26 +200,24 @@ class FlatVector12x8x8PositionReader(FlatVectorPositionReaderBase):
         return 12*8*8
 
 
-class FileSystemDataSaverWithShuffling:
+class FileSystemDataSaverWithShuffling(Logger):
 
-    def __init__(self, output_dir, chunk_size = 5000, number_of_buckets = 50, print_progress = True):
+    def __init__(self, output_dir, chunk_size = 5000, number_of_buckets = 50):
         self.output_dir = output_dir
         self.chunk_size = chunk_size
         self.number_of_buckets = number_of_buckets
         self.chunks = [list([]) for _ in range(0,number_of_buckets)]
         self.current_order_of_inserting = range(0,self.number_of_buckets)[::-1]
-        self.print_progress = print_progress
         self._total_points_saved = 0
         shuffle(self.current_order_of_inserting)
+        Logger.__init__(self, name = self._id())
 
     def _log_saving(self, size, filename):
-        if self.print_progress:
-            self._total_points_saved += size
-            print ("Chunk of " + str(size) + " data points has been saved to " + filename)
+        self._total_points_saved += size
+        self.log_info("Chunk of " + str(size) + " data points has been saved to " + filename)
 
     def _log_total(self):
-        if self.print_progress:
-            print ("Total data points saved so far:  " + str(self._total_points_saved))
+        self.log_info("Total data points saved so far:  " + str(self._total_points_saved))
 
     def _save(self, chunk):
         with gzip.open(self.output_dir + '/' + str(uuid.uuid1()) + '.pt' , 'wb') as f:
@@ -211,3 +244,6 @@ class FileSystemDataSaverWithShuffling:
         if len(self.chunks[current_chunk]) >= self.chunk_size:
             self._save(self.chunks[current_chunk])
             self.chunks[current_chunk] = []
+
+    def _id(self):
+        return str(id(self)) + self.__class__.__name__

@@ -6,5 +6,6 @@ output/
 output_test/
 data/
 .cache
+logs/
 *.ipynb
 __pycache__
