@@ -1,5 +1,5 @@
 from common.transformations import Fen
-from common.readers import PgnReader
+from common.io import PgnReader
 
 
 def test_if_initial_position_correctly_read():

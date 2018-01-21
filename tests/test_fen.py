@@ -1,5 +1,5 @@
 from common.transformations import Fen
-from common.readers import PgnReader
+from common.io import PgnReader
 
 
 def test_if_flipped_twice_produce_original_input_alekhine_games():

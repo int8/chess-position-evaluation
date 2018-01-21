@@ -1,5 +1,5 @@
 from common.transformations import Fen, DataSpecs
-from common.readers import PgnReader
+from common.io import PgnReader
 
 
 def test_if_position_length_is_8x8x6():
