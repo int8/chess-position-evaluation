@@ -142,8 +142,8 @@ class Tensor6x8x8PositionReader(PositionReader):
             self.data = data
         else:
             self.data['X'] = torch.cat((self.data['X'], data['X']), 0)
-        self.data['Y'] = torch.cat((self.data['Y'], data['Y']), 0)
-        self.data['fens'] + self.data['fens'] + data['fens']
+            self.data['Y'] = torch.cat((self.data['Y'], data['Y']), 0)
+            self.data['fens'] + self.data['fens'] + data['fens']
 
     def is_load_needed(self):
         return (self.data == None) or (self.current_index + self.batch_size >= self.get_number_of_observations())
@@ -175,8 +175,8 @@ class FlatVectorPositionReaderBase(PositionReader):
             self.data = data
         else:
             self.data['X'] = torch.cat((self.data['X'], data['X']), 0)
-        self.data['Y'] = torch.cat((self.data['Y'], data['Y']), 0)
-        self.data['fens'] + self.data['fens'] + data['fens']
+            self.data['Y'] = torch.cat((self.data['Y'], data['Y']), 0)
+            self.data['fens'] + self.data['fens'] + data['fens']
 
     def is_load_needed(self):
         return (self.data == None) or (self.current_index + self.batch_size >= self.get_number_of_observations())

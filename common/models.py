@@ -1,9 +1,9 @@
 import torch.nn as nn
-
+import torch.nn.functional as F
 class FeedForwardNetwork(nn.Module):
 
     def __init__(self, layers_shapes, activations):
-        super(FeedForwardNetwork, self).__init__()
+        nn.Module.__init__(self)
         self.activations = activations
         self.layers_shapes = layers_shapes
         for i in range(0, len(self.layers_shapes)):

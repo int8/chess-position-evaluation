@@ -6,6 +6,7 @@ class ValueNetworkTrainer(Logger):
     def __init__(self, training_data_reader, model, loss_function, x_tensorize_f, y_tensorize_f, optimizer, use_cuda = True):
         self.training_data_reader = training_data_reader
         self.model = model
+        self.model.train()
         self.loss_function = loss_function
         self.x_tensorize_f = x_tensorize_f
         self.y_tensorize_f = y_tensorize_f
