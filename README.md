@@ -11,16 +11,10 @@ In other words every piece on ```8x8``` board is represented by vector of dimens
 
 - position metadata (result, number_of_moves, castlings potential) is included
 
-Requirements:
-```
-numpy>=1.12.0
-python-chess>=0.22.0
-torch>=0.3.0
-torchvision>=0.2.0
-pytest>=3.3.1
-```
 
-To install requirements run:
+To install:
+- install pytorch (http://pytorch.org/)
+- install other requirements
 ```bash
 pip install -r requirements.txt
 ```
